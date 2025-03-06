@@ -1,5 +1,18 @@
-import { useState } from 'react'
-import './App.css'
+import { useState } from 'react';
+import Container from '@mui/material/Container';
+import Typography from '@mui/material/Typography';
+import TextField from '@mui/material/TextField';
+import Button from '@mui/material/Button';
+import Paper from '@mui/material/Paper';
+import Box from '@mui/material/Box';
+import Table from '@mui/material/Table';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import './App.css';
+import { IconButton, InputAdornment } from '@mui/material';
+import { AddCircle } from '@mui/icons-material';
 
 type Fund = {
   id: number;
@@ -8,12 +21,23 @@ type Fund = {
   price: string;
 };
 
+type ResultRow = {
+  fundName: string;
+  shares: number;
+  cost: number;
+  dividendPayment: number;
+};
+
 function App() {
   const [dividendGoal, setDividendGoal] = useState('');
-  const [funds, setFunds] = useState<Fund[]>([]);
-  const [result, setResult] = useState<string>('');
+  const [funds, setFunds] = useState<Fund[]>([{
+    id: 0,
+    name: '',
+    dividend: '0.00',
+    price: '0.00'
+  }]);
+  const [calculationResult, setCalculationResult] = useState<{ rows: ResultRow[]; totalInvestment: number; totalDividendPayment: number } | null>(null);
 
-  // Function to add an empty fund
   function addFund() {
     const newFund: Fund = {
       id: Date.now(),
@@ -24,17 +48,14 @@ function App() {
     setFunds(prev => [...prev, newFund]);
   }
 
-  // Update a fund field
   function updateFund(id: number, field: keyof Fund, value: string) {
     setFunds(prev => prev.map(f => (f.id === id ? { ...f, [field]: value } : f)));
   }
 
-  // Remove a fund
   function removeFund(id: number) {
     setFunds(prev => prev.filter(f => f.id !== id));
   }
 
-  // Calculate results based on funds and dividend goal
   function calculate() {
     const goal = parseFloat(dividendGoal);
     if (isNaN(goal) || goal <= 0) {
@@ -62,70 +83,143 @@ function App() {
       return { ...f, dividend, price, yieldValue };
     });
 
-    let output = '<h2>Resultados:</h2><ul>';
+    const rows: ResultRow[] = [];
     let totalInvestment = 0;
-
+    let totalDividendPayment = 0;
     fundsWithYield.forEach(f => {
       const allocation = (f.yieldValue / totalYield) * goal;
       const shares = Math.ceil(allocation / f.dividend);
       const cost = shares * f.price;
+      const dividendPayment = shares * f.dividend;
       totalInvestment += cost;
-      output += `<li><strong>${f.name}</strong>: ${shares} cotas (Investimento: R$ ${cost.toFixed(2)})</li>`;
+      totalDividendPayment += dividendPayment;
+      rows.push({ fundName: f.name, shares, cost, dividendPayment });
     });
-    output += `</ul><p><strong>Investimento total:</strong> R$ ${totalInvestment.toFixed(2)}</p>`;
-    setResult(output);
+    setCalculationResult({ rows, totalInvestment, totalDividendPayment });
   }
 
   return (
-    <>
-      <h1>Calculadora de investimentos para Fundos Imobiliários</h1>
-      <label htmlFor="dividendGoal">Dividendos mensais desejados: R$</label>
-      <input
-        type="number"
-        id="dividendGoal"
-        placeholder="Ex: 1000"
-        value={dividendGoal}
-        onChange={e => setDividendGoal(e.target.value)}
-      />
-      <button id="addFund" onClick={addFund}>Adicionar Fundo</button>
-      
-      <div id="fundsContainer">
-        {funds.map(fund => (
-          <div key={fund.id} className="fund">
-            {/* Fund inputs */}
-            <input
-              type="text"
-              placeholder="Nome do Fundo"
-              className="fundName"
-              value={fund.name}
-              onChange={e => updateFund(fund.id, 'name', e.target.value)}
-            />
-            <input
-              type="number"
-              placeholder="Dividendo/Cota"
-              className="dividend"
-              step="0.01"
-              value={fund.dividend}
-              onChange={e => updateFund(fund.id, 'dividend', e.target.value)}
-            />
-            <input
-              type="number"
-              placeholder="Preço da Cota"
-              className="price"
-              step="0.01"
-              value={fund.price}
-              onChange={e => updateFund(fund.id, 'price', e.target.value)}
-            />
-            <button onClick={() => removeFund(fund.id)} className="removeFund">Remover</button>
-          </div>
-        ))}
-      </div>
-      
-      <button id="calculate" onClick={calculate}>Calcular</button>
-      
-      <div className="result" id="result" dangerouslySetInnerHTML={{ __html: result }}></div>
-    </>
-  )
+    <Container maxWidth="md" sx={{ my: 4 }}>
+      <Typography variant="h4" component="h1" gutterBottom>
+        Calculadora de Dividendos de FIIs
+      </Typography>
+      <Box sx={{ mb: 2 }}>
+        <TextField
+          fullWidth
+          type="number"
+          label="Meta de total dividendos/mês"
+          placeholder="1000.00"
+          value={dividendGoal}
+          onChange={(e) => setDividendGoal(e.target.value)}
+          variant="outlined"
+          slotProps={{
+            input: { startAdornment: <InputAdornment position="start">R$</InputAdornment> },
+          }}
+        />
+      </Box>
+      <Paper sx={{ mb: 2, overflow: 'auto'}}>
+        <Table stickyHeader>
+          <TableHead>
+            <TableRow>
+              <TableCell style={{ minWidth: 100 }}>Fundo</TableCell>
+              <TableCell style={{ minWidth: 100 }}>Dividendo (R$)</TableCell>
+              <TableCell style={{ minWidth: 100 }}>Preço (R$)</TableCell>
+              <TableCell>
+                <IconButton color="primary" onClick={addFund}>
+                  <AddCircle />
+                </IconButton>
+              </TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {funds.map(fund => (
+              <TableRow key={fund.id}>
+                <TableCell>
+                  <TextField
+                    fullWidth
+                    value={fund.name}
+                    onChange={(e) => updateFund(fund.id, 'name', e.target.value)}
+                    placeholder='Ex.: XPML11'
+                  />
+                </TableCell>
+                <TableCell>
+                  <TextField
+                    fullWidth
+                    type="number"
+                    value={fund.dividend}
+                    onChange={(e) => updateFund(fund.id, 'dividend', e.target.value)}
+                    InputProps={{
+                      startAdornment: <InputAdornment position="start">R$</InputAdornment>,
+                    }}
+                  />
+                </TableCell>
+                <TableCell>
+                  <TextField
+                    fullWidth
+                    type="number"
+                    value={fund.price}
+                    onChange={(e) => updateFund(fund.id, 'price', e.target.value)}
+                    InputProps={{
+                      startAdornment: <InputAdornment position="start">R$</InputAdornment>,
+                    }}
+                  />
+                </TableCell>
+                <TableCell>
+                  <Button variant="outlined" color="error" onClick={() => removeFund(fund.id)}>
+                    Remover
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+            <TableRow>
+              <TableCell colSpan={4} align="left">
+                <Button variant="outlined" color="primary" onClick={addFund} startIcon={<AddCircle />}>
+                  Adicionar Fundo
+                </Button>
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      </Paper>
+      <Box sx={{ mb: 2 }}>
+        <Button variant="contained" color="secondary" onClick={calculate}>
+          Calcular
+        </Button>
+      </Box>
+      {calculationResult && (
+        <Paper sx={{ p: 2, overflow: 'auto' }}>
+          <Typography variant="h6" gutterBottom>
+            Resultados:
+          </Typography>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Fundo</TableCell>
+                <TableCell>Cotas</TableCell>
+                <TableCell>Dividendos (R$)</TableCell>
+                <TableCell>Investido (R$)</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {calculationResult.rows.map((row, idx) => (
+                <TableRow key={idx}>
+                  <TableCell>{row.fundName}</TableCell>
+                  <TableCell>{row.shares}</TableCell>
+                  <TableCell>{row.dividendPayment.toFixed(2)}</TableCell>
+                  <TableCell>{row.cost.toFixed(2)}</TableCell>
+                </TableRow>
+              ))}
+              <TableRow>
+                <TableCell colSpan={2}><strong>Total</strong></TableCell>
+                <TableCell><strong>R$ {calculationResult.totalDividendPayment.toFixed(2)}</strong></TableCell>
+                <TableCell><strong>R$ {calculationResult.totalInvestment.toFixed(2)}</strong></TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </Paper>
+      )}
+    </Container>
+  );
 }
 
-export default App
+export default App;
