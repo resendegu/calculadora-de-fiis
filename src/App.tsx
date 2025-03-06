@@ -12,7 +12,7 @@ import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
 import './App.css';
 import { IconButton, InputAdornment } from '@mui/material';
-import { AddCircle, PlusOne } from '@mui/icons-material';
+import { AddCircle } from '@mui/icons-material';
 
 type Fund = {
   id: number;
