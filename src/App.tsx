@@ -25,7 +25,7 @@ type ResultRow = {
   fundName: string;
   shares: number;
   cost: number;
-  dividendPayment: number; // new field for dividend paid by each fund
+  dividendPayment: number;
 };
 
 function App() {
@@ -38,7 +38,6 @@ function App() {
   }]);
   const [calculationResult, setCalculationResult] = useState<{ rows: ResultRow[]; totalInvestment: number; totalDividendPayment: number } | null>(null);
 
-  // Function to add an empty fund
   function addFund() {
     const newFund: Fund = {
       id: Date.now(),
@@ -49,17 +48,14 @@ function App() {
     setFunds(prev => [...prev, newFund]);
   }
 
-  // Update a fund field
   function updateFund(id: number, field: keyof Fund, value: string) {
     setFunds(prev => prev.map(f => (f.id === id ? { ...f, [field]: value } : f)));
   }
 
-  // Remove a fund
   function removeFund(id: number) {
     setFunds(prev => prev.filter(f => f.id !== id));
   }
 
-  // Calculate results based on funds and dividend goal
   function calculate() {
     const goal = parseFloat(dividendGoal);
     if (isNaN(goal) || goal <= 0) {
@@ -94,7 +90,7 @@ function App() {
       const allocation = (f.yieldValue / totalYield) * goal;
       const shares = Math.ceil(allocation / f.dividend);
       const cost = shares * f.price;
-      const dividendPayment = shares * f.dividend; // calculate dividend per fund
+      const dividendPayment = shares * f.dividend;
       totalInvestment += cost;
       totalDividendPayment += dividendPayment;
       rows.push({ fundName: f.name, shares, cost, dividendPayment });
@@ -105,14 +101,14 @@ function App() {
   return (
     <Container maxWidth="md" sx={{ my: 4 }}>
       <Typography variant="h4" component="h1" gutterBottom>
-        Calculadora de FIIs
+        Calculadora de Dividendos de FIIs
       </Typography>
       <Box sx={{ mb: 2 }}>
         <TextField
           fullWidth
           type="number"
           label="Meta de total dividendos/mês"
-          placeholder="Ex: 1000"
+          placeholder="1000.00"
           value={dividendGoal}
           onChange={(e) => setDividendGoal(e.target.value)}
           variant="outlined"
@@ -143,7 +139,7 @@ function App() {
                     fullWidth
                     value={fund.name}
                     onChange={(e) => updateFund(fund.id, 'name', e.target.value)}
-                    placeholder='XPML11'
+                    placeholder='Ex.: XPML11'
                   />
                 </TableCell>
                 <TableCell>
