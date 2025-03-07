@@ -11,8 +11,8 @@ import TableRow from '@mui/material/TableRow';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
 import './App.css';
-import { ButtonGroup, FormControl, IconButton, InputAdornment, InputLabel, MenuItem, Select } from '@mui/material';
-import { AddCircle } from '@mui/icons-material';
+import { ButtonGroup, FormControl, IconButton, InputAdornment, InputLabel, MenuItem, Select, Tooltip } from '@mui/material';
+import { AddCircle, BuildCircle, Update } from '@mui/icons-material';
 import useMediaQuery from '@mui/material/useMediaQuery';
 
 type Fund = {
@@ -46,6 +46,10 @@ function App() {
   const isScreenSmall = useMediaQuery('(max-width:600px)');
 
   const resultRef = useRef<HTMLDivElement>(null);
+
+  function getFundUrl(fund:string) {
+    return `https://cotacao.b3.com.br/mds/api/v1/instrumentQuotation/${fund}`;
+  }
 
   useEffect(() => {
     const savedDividendGoal = sessionStorage.getItem("dividendGoal");
@@ -102,6 +106,29 @@ function App() {
     if (funds.length === 1) {
       sessionStorage.removeItem("funds");
     }
+  }
+
+  async function fetchAndUpdateFundPrice(id: number, fundName: string) {
+    if (!fundName.trim()) return;
+    try {
+      const url = getFundUrl(fundName);
+      const response = await fetch(url);
+      const data = await response.json();
+      const curPrc = data?.Trad?.[0]?.scty?.SctyQtn?.curPrc;
+      if (curPrc) {
+        updateFund(id, 'price', curPrc.toString());
+      }
+    } catch (error) {
+      console.error('Error fetching fund price:', error);
+    }
+  }
+
+  function handleUpdateAllPrices() {
+    funds.forEach(fund => {
+      if (fund.name.trim()) {
+        fetchAndUpdateFundPrice(fund.id, fund.name);
+      }
+    });
   }
 
   function calculate() {
@@ -238,6 +265,18 @@ function App() {
           variant="outlined"
         />
       </Box>
+      <Box display='flex' justifyContent='flex-end' sx={{ mb: 2 }}>
+        <Tooltip title="Adicionar fundo" arrow>
+          <IconButton color="primary" onClick={addFund}>
+            <AddCircle />
+          </IconButton>
+        </Tooltip>
+        <Tooltip title="Atualizar preços" arrow>
+          <IconButton color="primary" onClick={handleUpdateAllPrices}>
+            <Update />
+          </IconButton>
+        </Tooltip>
+      </Box>
       <Paper sx={{ mb: 2, overflow: 'auto'}} elevation={8}>
         <Table stickyHeader>
           <TableHead>
@@ -245,11 +284,7 @@ function App() {
               <TableCell style={{ minWidth: 100 }}>Fundo</TableCell>
               <TableCell style={{ minWidth: 100 }}>Dividendo (R$)</TableCell>
               <TableCell style={{ minWidth: 100 }}>Preço (R$)</TableCell>
-              <TableCell>
-                <IconButton color="primary" onClick={addFund}>
-                  <AddCircle />
-                </IconButton>
-              </TableCell>
+              <TableCell align='center'><BuildCircle /></TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -260,6 +295,7 @@ function App() {
                     fullWidth
                     value={fund.name}
                     onChange={(e) => updateFund(fund.id, 'name', e.target.value)}
+                    onBlur={() => fetchAndUpdateFundPrice(fund.id, fund.name)}
                     placeholder='Ex.: XPML11'
                     variant='standard'
                   />
