@@ -275,6 +275,7 @@ function App() {
                       startAdornment: <InputAdornment position="start">R$</InputAdornment>,
                     }}
                     variant='standard'
+                    placeholder='0.90'
                   />
                 </TableCell>
                 <TableCell>
@@ -287,6 +288,7 @@ function App() {
                       startAdornment: <InputAdornment position="start">R$</InputAdornment>,
                     }}
                     variant='standard'
+                    placeholder='100.00'
                   />
                 </TableCell>
                 <TableCell>
@@ -333,14 +335,27 @@ function App() {
                 <TableRow key={idx}>
                   <TableCell>{row.fundName}</TableCell>
                   <TableCell>{row.shares}</TableCell>
-                  <TableCell>{row.dividendPayment.toFixed(2)}</TableCell>
-                  <TableCell>{row.cost.toFixed(2)}</TableCell>
+                  {/* Changed formatting */}
+                  <TableCell>
+                    {row.dividendPayment.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                  </TableCell>
+                  <TableCell>
+                    {row.cost.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                  </TableCell>
                 </TableRow>
               ))}
               <TableRow>
                 <TableCell colSpan={2}><strong>Total</strong></TableCell>
-                <TableCell><strong>R$ {calculationResult.totalDividendPayment.toFixed(2)}</strong></TableCell>
-                <TableCell><strong>R$ {calculationResult.totalInvestment.toFixed(2)}</strong></TableCell>
+                <TableCell>
+                  <strong>
+                    {calculationResult.totalDividendPayment.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                  </strong>
+                </TableCell>
+                <TableCell>
+                  <strong>
+                    {calculationResult.totalInvestment.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                  </strong>
+                </TableCell>
               </TableRow>
             </TableBody>
           </Table>
