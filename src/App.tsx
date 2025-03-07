@@ -47,6 +47,11 @@ function App() {
 
   const resultRef = useRef<HTMLDivElement>(null);
 
+  function getFundUrl(fund:string) {
+    return `https://cotacao.b3.com.br/mds/api/v1/instrumentQuotation/${fund}`;
+    // Example response: {"BizSts":{"cd":"OK"},"Msg":{"dtTm":"2025-03-07 14:51:47"},"Trad":[{"scty":{"SctyQtn":{"opngPric":96.89,"minPric":96.41,"maxPric":97.18,"avrgPric":96.842,"curPrc":96.91,"prcFlcn":0.6334372},"mkt":{"nm":"Vista"},"symb":"XPML11","desc":"FII XP MALLSCI"},"ttlQty":11660}]}
+  }
+
   useEffect(() => {
     const savedDividendGoal = sessionStorage.getItem("dividendGoal");
     const savedFunds = sessionStorage.getItem("funds");
@@ -101,6 +106,21 @@ function App() {
     setFunds(prev => prev.filter(f => f.id !== id));
     if (funds.length === 1) {
       sessionStorage.removeItem("funds");
+    }
+  }
+
+  async function fetchAndUpdateFundPrice(id: number, fundName: string) {
+    if (!fundName.trim()) return;
+    try {
+      const url = getFundUrl(fundName);
+      const response = await fetch(url);
+      const data = await response.json();
+      const curPrc = data?.Trad?.[0]?.scty?.SctyQtn?.curPrc;
+      if (curPrc) {
+        updateFund(id, 'price', curPrc.toString());
+      }
+    } catch (error) {
+      console.error('Error fetching fund price:', error);
     }
   }
 
@@ -260,6 +280,7 @@ function App() {
                     fullWidth
                     value={fund.name}
                     onChange={(e) => updateFund(fund.id, 'name', e.target.value)}
+                    onBlur={() => fetchAndUpdateFundPrice(fund.id, fund.name)}
                     placeholder='Ex.: XPML11'
                     variant='standard'
                   />
