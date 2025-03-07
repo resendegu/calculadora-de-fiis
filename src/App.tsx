@@ -11,8 +11,8 @@ import TableRow from '@mui/material/TableRow';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
 import './App.css';
-import { ButtonGroup, FormControl, IconButton, InputAdornment, InputLabel, MenuItem, Select } from '@mui/material';
-import { AddCircle } from '@mui/icons-material';
+import { ButtonGroup, FormControl, IconButton, InputAdornment, InputLabel, MenuItem, Select, Toolbar, Tooltip } from '@mui/material';
+import { AddCircle, BuildCircle, Update } from '@mui/icons-material';
 import useMediaQuery from '@mui/material/useMediaQuery';
 
 type Fund = {
@@ -49,7 +49,6 @@ function App() {
 
   function getFundUrl(fund:string) {
     return `https://cotacao.b3.com.br/mds/api/v1/instrumentQuotation/${fund}`;
-    // Example response: {"BizSts":{"cd":"OK"},"Msg":{"dtTm":"2025-03-07 14:51:47"},"Trad":[{"scty":{"SctyQtn":{"opngPric":96.89,"minPric":96.41,"maxPric":97.18,"avrgPric":96.842,"curPrc":96.91,"prcFlcn":0.6334372},"mkt":{"nm":"Vista"},"symb":"XPML11","desc":"FII XP MALLSCI"},"ttlQty":11660}]}
   }
 
   useEffect(() => {
@@ -122,6 +121,14 @@ function App() {
     } catch (error) {
       console.error('Error fetching fund price:', error);
     }
+  }
+
+  function handleUpdateAllPrices() {
+    funds.forEach(fund => {
+      if (fund.name.trim()) {
+        fetchAndUpdateFundPrice(fund.id, fund.name);
+      }
+    });
   }
 
   function calculate() {
@@ -258,6 +265,18 @@ function App() {
           variant="outlined"
         />
       </Box>
+      <Box display='flex' justifyContent='flex-end' sx={{ mb: 2 }}>
+        <Tooltip title="Adicionar fundo" arrow>
+          <IconButton color="primary" onClick={addFund}>
+            <AddCircle />
+          </IconButton>
+        </Tooltip>
+        <Tooltip title="Atualizar preços" arrow>
+          <IconButton color="primary" onClick={handleUpdateAllPrices}>
+            <Update />
+          </IconButton>
+        </Tooltip>
+      </Box>
       <Paper sx={{ mb: 2, overflow: 'auto'}} elevation={8}>
         <Table stickyHeader>
           <TableHead>
@@ -265,11 +284,7 @@ function App() {
               <TableCell style={{ minWidth: 100 }}>Fundo</TableCell>
               <TableCell style={{ minWidth: 100 }}>Dividendo (R$)</TableCell>
               <TableCell style={{ minWidth: 100 }}>Preço (R$)</TableCell>
-              <TableCell>
-                <IconButton color="primary" onClick={addFund}>
-                  <AddCircle />
-                </IconButton>
-              </TableCell>
+              <TableCell align='center'><BuildCircle /></TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
