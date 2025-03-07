@@ -1,19 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
-import Container from '@mui/material/Container';
-import Typography from '@mui/material/Typography';
-import TextField from '@mui/material/TextField';
-import Button from '@mui/material/Button';
-import Paper from '@mui/material/Paper';
-import Box from '@mui/material/Box';
-import Table from '@mui/material/Table';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
+import { 
+  Container, Typography, TextField, Button, Paper, Box, 
+  Table, TableHead, TableRow, TableBody, TableCell, ButtonGroup, 
+  FormControl, IconButton, InputAdornment, InputLabel, MenuItem, 
+  Select, Tooltip, useMediaQuery, Dialog, DialogTitle, DialogContent, 
+  DialogActions 
+} from '@mui/material';
+import { AddCircle, BuildCircle, Help, Update } from '@mui/icons-material';
 import './App.css';
-import { ButtonGroup, FormControl, IconButton, InputAdornment, InputLabel, MenuItem, Select, Tooltip } from '@mui/material';
-import { AddCircle, BuildCircle, Update } from '@mui/icons-material';
-import useMediaQuery from '@mui/material/useMediaQuery';
 
 type Fund = {
   id: number;
@@ -42,6 +36,7 @@ function App() {
   const [saves, setSaves] = useState<Save[]>([]);
   const [selectedSave, setSelectedSave] = useState<string>('');
   const [newSaveName, setNewSaveName] = useState('');
+  const [openHelp, setOpenHelp] = useState(false);
 
   const isScreenSmall = useMediaQuery('(max-width:600px)');
 
@@ -213,9 +208,16 @@ function App() {
 
   return (
     <Container maxWidth="md" sx={{ my: 4 }}>
-      <Typography variant={isScreenSmall ? 'h6' : 'h4'} component="h1" gutterBottom>
-        Calculadora de Dividendos
-      </Typography>
+      <Box display="flex" alignItems="center" gap={1}>
+        <Typography variant={isScreenSmall ? 'h6' : 'h4'} component="h1" gutterBottom>
+          Calculadora de Dividendos
+        </Typography>
+        <Tooltip title="Como funciona?" arrow>
+          <IconButton onClick={() => setOpenHelp(true)}>
+            <Help />
+          </IconButton>
+        </Tooltip>
+      </Box>
       <Box sx={{ display: isScreenSmall ? 'grid' : 'flex', gap: 2, mb: 2 }}>
         <FormControl>
           <InputLabel id="selectWalletLabel">Carteiras salvas</InputLabel>
@@ -395,6 +397,31 @@ function App() {
           </Table>
         </Paper>
       )}
+      <Dialog open={openHelp} onClose={() => setOpenHelp(false)}>
+        <DialogTitle>Como funciona?</DialogTitle>
+        <DialogContent dividers>
+          <Typography gutterBottom>
+            Esta calculadora de dividendos permite simular o investimento necessário para atingir sua meta de dividendos mensais. Ela distribui o investimento entre os fundos cadastrados de forma proporcional, considerando a relação dividendo/preço.
+          </Typography>
+          <Typography gutterBottom>
+            Preencha os campos com os valores desejados: insira a meta de dividendos, nome da carteira e os dados dos fundos (nome, dividendo e preço). Os dados dos fundos serão utilizados para calcular a quantidade de cotas necessárias.
+          </Typography>
+          <Typography gutterBottom>
+            Você pode salvar as configurações no navegador, pois as informações são armazenadas localmente e nada é enviado para nossos servidores.
+          </Typography>
+          <Typography gutterBottom>
+            Após inserir os dados, clique em "Calcular" para ver o investimento total e o valor de dividendos esperado. Use esses resultados para planejar melhor seus investimentos, e distribuir suas aplicações igualmente nos fundos de sua carteira.
+          </Typography>
+          <Typography gutterBottom>
+            Aviso: a calculadora não deve ser considerada como recomendação de investimento. Consulte um especialista antes de tomar decisões financeiras.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenHelp(false)} color="primary">
+            Fechar
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 }
