@@ -1,24 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
-import Container from '@mui/material/Container';
-import Typography from '@mui/material/Typography';
-import TextField from '@mui/material/TextField';
-import Button from '@mui/material/Button';
-import Paper from '@mui/material/Paper';
-import Box from '@mui/material/Box';
-import Table from '@mui/material/Table';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import './App.css';
-import { ButtonGroup, FormControl, IconButton, InputAdornment, InputLabel, MenuItem, Select, Tooltip } from '@mui/material';
+import { 
+  Container, Typography, TextField, Button, Paper, Box, 
+  Table, TableHead, TableRow, TableBody, TableCell, ButtonGroup, 
+  FormControl, IconButton, InputAdornment, InputLabel, MenuItem, 
+  Select, Tooltip, useMediaQuery, Dialog, DialogTitle, DialogContent, 
+  DialogActions 
+} from '@mui/material';
 import { AddCircle, BuildCircle, Help, Update } from '@mui/icons-material';
-import useMediaQuery from '@mui/material/useMediaQuery';
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContent from '@mui/material/DialogContent';
-import DialogActions from '@mui/material/DialogActions';
-import { Info } from '@mui/icons-material';
+import './App.css';
 
 type Fund = {
   id: number;
