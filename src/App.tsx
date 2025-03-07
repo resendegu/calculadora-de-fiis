@@ -11,8 +11,9 @@ import TableRow from '@mui/material/TableRow';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
 import './App.css';
-import { IconButton, InputAdornment } from '@mui/material';
+import { ButtonGroup, FormControl, IconButton, InputAdornment, InputLabel, MenuItem, Select } from '@mui/material';
 import { AddCircle } from '@mui/icons-material';
+import useMediaQuery from '@mui/material/useMediaQuery';
 
 type Fund = {
   id: number;
@@ -41,6 +42,8 @@ function App() {
   const [saves, setSaves] = useState<Save[]>([]);
   const [selectedSave, setSelectedSave] = useState<string>('');
   const [newSaveName, setNewSaveName] = useState('');
+
+  const isScreenSmall = useMediaQuery('(max-width:600px)');
 
   const resultRef = useRef<HTMLDivElement>(null);
 
@@ -143,7 +146,6 @@ function App() {
     setCalculationResult({ rows, totalInvestment, totalDividendPayment });
   }
 
-  // New function to save the current configuration
   function handleSaveCurrent() {
     if (!newSaveName.trim()) {
       alert("Digite um nome para a configuração.");
@@ -159,7 +161,6 @@ function App() {
     alert("Configuração salva!");
   }
 
-  // New function to load a selected configuration
   function handleLoadSave() {
     const saveToLoad = saves.find(s => s.name === selectedSave);
     if (saveToLoad) {
@@ -171,7 +172,6 @@ function App() {
     }
   }
 
-  // New function to delete a selected configuration
   function handleDeleteSave() {
     if (!selectedSave) {
       alert("Selecione uma configuração para deletar.");
@@ -186,43 +186,42 @@ function App() {
 
   return (
     <Container maxWidth="md" sx={{ my: 4 }}>
-      <Typography variant="h4" component="h1" gutterBottom>
-        Calculadora de Dividendos de FIIs
+      <Typography variant={isScreenSmall ? 'h6' : 'h4'} component="h1" gutterBottom>
+        Calculadora de Dividendos
       </Typography>
-      {/* New UI for loading a saved configuration */}
-      <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-        <TextField
-          select
-          label="Carteiras salvas"
-          value={selectedSave}
-          onChange={(e) => setSelectedSave(e.target.value)}
-          SelectProps={{ native: true }}
-          variant="outlined"
-          sx={{ minWidth: 200 }}
-          slotProps={{
-            inputLabel: {
-              shrink: true,
-            },
-          }}
-        >
-          <option value="">Selecione</option>
-          {saves.map(save => (
-            <option key={save.name} value={save.name}>{save.name}</option>
-          ))}
-        </TextField>
-        <Button variant="contained" onClick={handleLoadSave}>
-          Carregar carteira
-        </Button>
-        {/* New delete button */}
-        <Button variant="contained" color="error" onClick={handleDeleteSave}>
-          Deletar carteira
-        </Button>
+      <Box sx={{ display: isScreenSmall ? 'grid' : 'flex', gap: 2, mb: 2 }}>
+        <FormControl>
+          <InputLabel id="selectWalletLabel">Carteiras salvas</InputLabel>
+          <Select
+            labelId="selectWalletLabel"
+            id="selectWallet"
+            value={selectedSave}
+            onChange={(e) => {
+              setSelectedSave(e.target.value)
+            }}
+            variant="standard"
+            sx={{ minWidth: 200 }}
+            size='small'
+          >
+            {saves.map(save => (
+              <MenuItem key={save.name} value={save.name}>{save.name}</MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+        <ButtonGroup variant='outlined' size='small' fullWidth={isScreenSmall}>
+          <Button onClick={handleLoadSave}>
+            Usar
+          </Button>
+          <Button color="error" onClick={handleDeleteSave}>
+            Deletar
+          </Button>
+        </ButtonGroup>
       </Box>
       <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
         <TextField
-          style={{ minWidth: 200 }}
+          sx={{ width: isScreenSmall ? 200 : '100%' }}
           type="number"
-          label="Meta de total dividendos/mês"
+          label={isScreenSmall ? "Meta dividendos" : "Meta de total dividendos/mês"} 
           placeholder="1000.00"
           value={dividendGoal}
           onChange={(e) => setDividendGoal(e.target.value)}
@@ -335,7 +334,6 @@ function App() {
                 <TableRow key={idx}>
                   <TableCell>{row.fundName}</TableCell>
                   <TableCell>{row.shares}</TableCell>
-                  {/* Changed formatting */}
                   <TableCell>
                     {row.dividendPayment.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                   </TableCell>
