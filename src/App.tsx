@@ -35,7 +35,7 @@ type Save = {
 function App() {
   const [dividendGoal, setDividendGoal] = useState('');
   const [funds, setFunds] = useState<Fund[]>([]);
-  const [calculationResult, setCalculationResult] = useState<{ rows: ResultRow[]; totalInvestment: number; totalDividendPayment: number } | null>(null);
+  const [calculationResult, setCalculationResult] = useState<{ rows: ResultRow[]; totalInvestment: number; totalDividendPayment: number; totalInvestmentNeeded: number; } | null>(null);
   const [saves, setSaves] = useState<Save[]>([]);
   const [selectedSave, setSelectedSave] = useState<string>('');
   const [newSaveName, setNewSaveName] = useState('');
@@ -160,6 +160,8 @@ function App() {
     const rows: ResultRow[] = [];
     let totalInvestment = 0;
     let totalDividendPayment = 0;
+    let totalInvestmentNeeded = 0;
+    
     fundsWithYield.forEach(f => {
       const allocation = (f.yieldValue / totalYield) * goal;
       const shares = Math.ceil(allocation / f.dividend);
@@ -169,9 +171,10 @@ function App() {
       const costToBuy = sharesToBuy * f.price;
       totalInvestment += cost;
       totalDividendPayment += dividendPayment;
+      totalInvestmentNeeded += costToBuy;
       rows.push({ fundName: f.name, shares, cost, dividendPayment, sharesToBuy, costToBuy });
     });
-    setCalculationResult({ rows, totalInvestment, totalDividendPayment });
+    setCalculationResult({ rows, totalInvestment, totalDividendPayment, totalInvestmentNeeded });
   }
 
   function handleSaveCurrent() {
@@ -410,12 +413,16 @@ function App() {
                     {calculationResult.totalDividendPayment.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                   </strong>
                 </TableCell>
-                <TableCell>
+                <TableCell colSpan={2}>
                   <strong>
                     {calculationResult.totalInvestment.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                   </strong>
                 </TableCell>
-                <TableCell colSpan={2}></TableCell>
+                <TableCell>
+                  <strong>
+                    {calculationResult.totalInvestmentNeeded.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                  </strong>
+                </TableCell>
               </TableRow>
             </TableBody>
           </Table>
