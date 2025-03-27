@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
-import { 
-  Container, Typography, TextField, Button, Paper, Box, 
-  Table, TableHead, TableRow, TableBody, TableCell, ButtonGroup, 
-  FormControl, IconButton, InputAdornment, InputLabel, MenuItem, 
-  Select, Tooltip, useMediaQuery, Dialog, DialogTitle, DialogContent, 
-  DialogActions 
+import {
+  Container, Typography, TextField, Button, Paper, Box,
+  Table, TableHead, TableRow, TableBody, TableCell, ButtonGroup,
+  FormControl, IconButton, InputAdornment, InputLabel, MenuItem,
+  Select, Tooltip, useMediaQuery, Dialog, DialogTitle, DialogContent,
+  DialogActions
 } from '@mui/material';
 import { AddCircle, BuildCircle, Help, Update } from '@mui/icons-material';
 import './App.css';
@@ -14,6 +14,7 @@ type Fund = {
   name: string;
   dividend: string;
   price: string;
+  currentShares: number;
 };
 
 type ResultRow = {
@@ -21,6 +22,8 @@ type ResultRow = {
   shares: number;
   cost: number;
   dividendPayment: number;
+  sharesToBuy: number;
+  costToBuy: number;
 };
 
 type Save = {
@@ -42,7 +45,7 @@ function App() {
 
   const resultRef = useRef<HTMLDivElement>(null);
 
-  function getFundUrl(fund:string) {
+  function getFundUrl(fund: string) {
     return `https://cotacao.b3.com.br/mds/api/v1/instrumentQuotation/${fund}`;
   }
 
@@ -87,12 +90,13 @@ function App() {
       id: Date.now(),
       name: '',
       dividend: '',
-      price: ''
+      price: '',
+      currentShares: 0, // Initialize currentShares to 0
     };
     setFunds(prev => [...prev, newFund]);
   }
 
-  function updateFund(id: number, field: keyof Fund, value: string) {
+  function updateFund(id: number, field: keyof Fund, value: string | number) {
     setFunds(prev => prev.map(f => (f.id === id ? { ...f, [field]: value } : f)));
   }
 
@@ -161,9 +165,11 @@ function App() {
       const shares = Math.ceil(allocation / f.dividend);
       const cost = shares * f.price;
       const dividendPayment = shares * f.dividend;
+      const sharesToBuy = Math.max(0, shares - f.currentShares);
+      const costToBuy = sharesToBuy * f.price;
       totalInvestment += cost;
       totalDividendPayment += dividendPayment;
-      rows.push({ fundName: f.name, shares, cost, dividendPayment });
+      rows.push({ fundName: f.name, shares, cost, dividendPayment, sharesToBuy, costToBuy });
     });
     setCalculationResult({ rows, totalInvestment, totalDividendPayment });
   }
@@ -250,7 +256,7 @@ function App() {
         <TextField
           sx={{ width: isScreenSmall ? 200 : '100%' }}
           type="number"
-          label={isScreenSmall ? "Meta dividendos" : "Meta de total dividendos/mês"} 
+          label={isScreenSmall ? "Meta dividendos" : "Meta de total dividendos/mês"}
           placeholder="1000.00"
           value={dividendGoal}
           onChange={(e) => setDividendGoal(e.target.value)}
@@ -279,13 +285,14 @@ function App() {
           </IconButton>
         </Tooltip>
       </Box>
-      <Paper sx={{ mb: 2, overflow: 'auto'}} elevation={8}>
+      <Paper sx={{ mb: 2, overflow: 'auto' }} elevation={8}>
         <Table stickyHeader>
           <TableHead>
             <TableRow>
               <TableCell style={{ minWidth: 100 }}>Fundo</TableCell>
               <TableCell style={{ minWidth: 100 }}>Dividendo (R$)</TableCell>
               <TableCell style={{ minWidth: 100 }}>Preço (R$)</TableCell>
+              <TableCell style={{ minWidth: 100 }}>Cotas atuais</TableCell>
               <TableCell align='center'><BuildCircle /></TableCell>
             </TableRow>
           </TableHead>
@@ -329,6 +336,16 @@ function App() {
                   />
                 </TableCell>
                 <TableCell>
+                  <TextField
+                    fullWidth
+                    type="number"
+                    value={fund.currentShares}
+                    onChange={(e) => updateFund(fund.id, 'currentShares', parseInt(e.target.value) || 0)}
+                    variant='standard'
+                    placeholder='0'
+                  />
+                </TableCell>
+                <TableCell>
                   <Button variant="outlined" size='small' color="error" onClick={() => removeFund(fund.id)}>
                     Remover
                   </Button>
@@ -336,7 +353,7 @@ function App() {
               </TableRow>
             ))}
             <TableRow>
-              <TableCell colSpan={4} align="left">
+              <TableCell colSpan={5} align="left">
                 <Button variant="outlined" color="primary" onClick={addFund} startIcon={<AddCircle />}>
                   Adicionar Fundo
                 </Button>
@@ -365,6 +382,8 @@ function App() {
                 <TableCell>Cotas</TableCell>
                 <TableCell>Dividendos (R$)</TableCell>
                 <TableCell>Investido (R$)</TableCell>
+                <TableCell>Cotas a comprar</TableCell>
+                <TableCell>Investimento necessário (R$)</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -377,6 +396,10 @@ function App() {
                   </TableCell>
                   <TableCell>
                     {row.cost.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                  </TableCell>
+                  <TableCell>{row.sharesToBuy}</TableCell> {/* New column */}
+                  <TableCell>
+                    {row.costToBuy.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                   </TableCell>
                 </TableRow>
               ))}
@@ -392,6 +415,7 @@ function App() {
                     {calculationResult.totalInvestment.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                   </strong>
                 </TableCell>
+                <TableCell colSpan={2}></TableCell>
               </TableRow>
             </TableBody>
           </Table>
@@ -404,7 +428,7 @@ function App() {
             Esta calculadora de dividendos permite simular o investimento necessário para atingir sua meta de dividendos mensais. Ela distribui o investimento entre os fundos cadastrados de forma proporcional, considerando a relação dividendo/preço.
           </Typography>
           <Typography gutterBottom>
-            Preencha os campos com os valores desejados: insira a meta de dividendos, nome da carteira e os dados dos fundos (nome, dividendo e preço). Os dados dos fundos serão utilizados para calcular a quantidade de cotas necessárias.
+            Preencha os campos com os valores desejados: insira a meta de dividendos, nome da carteira e os dados dos fundos (nome, dividendo, preço e quantidade de cotas atuais). Os dados dos fundos serão utilizados para calcular a quantidade de cotas necessárias.
           </Typography>
           <Typography gutterBottom>
             Você pode salvar as configurações no navegador, pois as informações são armazenadas localmente e nada é enviado para nossos servidores.
